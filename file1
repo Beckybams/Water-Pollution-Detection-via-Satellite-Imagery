@@ -1,0 +1,70 @@
+# Water-Pollution-Detection-via-Satellite-Imagery
+# Using Synthetic Data
+
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import classification_report, confusion_matrix, accuracy_score
+
+# Set random seed for reproducibility
+np.random.seed(42)
+
+# Generate synthetic satellite spectral data
+n_samples = 1000
+
+# Simulated spectral bands (like Sentinel/Landsat)
+blue = np.random.normal(loc=0.3, scale=0.05, size=n_samples)
+green = np.random.normal(loc=0.4, scale=0.05, size=n_samples)
+red = np.random.normal(loc=0.35, scale=0.05, size=n_samples)
+nir = np.random.normal(loc=0.5, scale=0.07, size=n_samples)
+swir = np.random.normal(loc=0.45, scale=0.06, size=n_samples)
+
+# Pollution index (synthetic logic)
+pollution_index = (red + swir) - (blue + green)
+
+# Create label: 1 = Polluted, 0 = Clean
+labels = (pollution_index > np.median(pollution_index)).astype(int)
+
+# Create DataFrame
+data = pd.DataFrame({
+    'Blue': blue,
+    'Green': green,
+    'Red': red,
+    'NIR': nir,
+    'SWIR': swir,
+    'Polluted': labels
+})
+
+# Features and Target
+X = data[['Blue', 'Green', 'Red', 'NIR', 'SWIR']]
+y = data['Polluted']
+
+# Train-Test Split
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42
+)
+
+# Train Model
+model = RandomForestClassifier(n_estimators=100, random_state=42)
+model.fit(X_train, y_train)
+
+# Predictions
+y_pred = model.predict(X_test)
+
+# Evaluation
+print("Accuracy:", accuracy_score(y_test, y_pred))
+print("\nConfusion Matrix:\n", confusion_matrix(y_test, y_pred))
+print("\nClassification Report:\n", classification_report(y_test, y_pred))
+
+# Feature Importance Visualization
+importances = model.feature_importances_
+
+plt.figure()
+plt.bar(X.columns, importances)
+plt.title("Feature Importance for Water Pollution Detection")
+plt.xlabel("Spectral Bands")
+plt.ylabel("Importance Score")
+plt.xticks(rotation=45)
+plt.show()
